@@ -15,7 +15,7 @@ file(GLOB_RECURSE sources "./src/*.cpp" "./src/*.hpp")
 add_executable(GRayV ${sources})
 
 target_include_directories(GRayV
-								PUBLIC "${CMAKE_BINARY_DIR}/include/"
+								PUBLIC "./include/"
 								PUBLIC "${GLFW_INCLUDE_DIRS}"
 								PUBLIC "${Vulkan_INCLUDE_DIR}")
 
