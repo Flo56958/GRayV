@@ -9,6 +9,8 @@ find_package(Vulkan REQUIRED)
 
 add_subdirectory(external/glm)
 add_subdirectory(external/glfw)
+add_subdirectory(external/shaderc)
+message(WARNING "Remember to run external/shaderc/utils/git-sync-deps with Python!")
 
 file(GLOB_RECURSE sources "./src/*.cpp" "./src/*.hpp")
 
@@ -17,9 +19,10 @@ add_executable(GRayV ${sources})
 target_include_directories(GRayV
 								PUBLIC "./include/"
 								PUBLIC "${GLFW_INCLUDE_DIRS}"
-								PUBLIC "${Vulkan_INCLUDE_DIR}")
+								PUBLIC "${Vulkan_INCLUDE_DIR}"
+								PUBLIC "${libshaderc_SOURCE_DIR}/include/")
 
-target_link_libraries(GRayV glm::glm glfw ${Vulkan_LIBRARIES})
+target_link_libraries(GRayV glm::glm glfw ${Vulkan_LIBRARIES} shaderc)
 
 # Compiler specific stuff
 IF(MSVC)
