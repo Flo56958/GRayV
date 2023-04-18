@@ -2,6 +2,7 @@
 #include <fstream>
 #include <Vulkan/Vulkan.hpp>
 #include <shaderc/shaderc.hpp>
+#include <filesystem>
 
 enum ShaderType {
     NONE = -1,
@@ -26,6 +27,7 @@ private:
 
     VkDevice device;
     VkShaderModule shaderModule = VK_NULL_HANDLE;
+    std::filesystem::file_time_type last_updated;
 
     shaderc::Compiler shaderCompiler;
     shaderc::CompileOptions compileOptions;

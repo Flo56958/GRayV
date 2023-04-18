@@ -1,6 +1,6 @@
 #include "Shader.h"
 
-#include <filesystem>
+#include <iostream>
 
 Shader::Shader(VkDevice device, std::string fileName, std::string shaderFolder) : device(device) {
 	const std::string current_path = std::filesystem::current_path().generic_string();
@@ -27,6 +27,7 @@ Shader::Shader(VkDevice device, std::string fileName, std::string shaderFolder) 
 	}
 
 	if (type != SPIR_V_BINARY) {
+		// TODO: Add Importer for GLSL Import files
 		compileOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
 		compileOptions.SetSourceLanguage(shaderc_source_language_glsl);
 		compileOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
@@ -46,13 +47,18 @@ Shader::~Shader() {
 }
 
 void Shader::reload() {
-	// Remove old shader
-	cleanup();
-
 	if (type == NONE)
 		throw std::runtime_error("Shader has NONE-Type!");
 
-	// Get new shader
+	// check for updated file
+	auto last_write = std::filesystem::last_write_time(fileLocation);
+	if (last_write == last_updated)
+		return; // no update required
+
+	// update last update timestamp
+	last_updated = last_write;
+
+	// Get new shader before the old one is removed in case of an error
 	std::vector<char> shaderBinary = readBinaryFile(fileLocation);
 	if (type == SPIR_V_BINARY) { // No need to compile
 		shaderBinary = readBinaryFile(fileLocation);
@@ -65,7 +71,8 @@ void Shader::reload() {
 			shaderCompiler.PreprocessGlsl(sourceString, (shaderc_shader_kind) type, fileLocation.c_str(), compileOptions);
 		if (preprocess.GetCompilationStatus() != shaderc_compilation_status_success)
 		{
-			throw std::runtime_error("Shader preprocessing failed: " + preprocess.GetErrorMessage());
+			std::cerr << preprocess.GetErrorMessage() << std::endl;
+			return; // recompilation failed
 		}
 		const std::string postpre(preprocess.cbegin(), preprocess.cend());
 
@@ -74,11 +81,15 @@ void Shader::reload() {
 			shaderCompiler.CompileGlslToSpv(postpre, (shaderc_shader_kind)type, fileLocation.c_str(), compileOptions);
 		if (binary.GetCompilationStatus() != shaderc_compilation_status_success)
 		{
-			throw std::runtime_error("Shader compilation failed: " + binary.GetErrorMessage());
+			std::cerr << binary.GetErrorMessage() << std::endl;
+			return; // recompilation failed
 		}
 
 		shaderBinary = std::vector<char>(binary.cbegin(), binary.cend());
 	}
+
+	// Remove old shader
+	cleanup();
 
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
@@ -89,4 +100,6 @@ void Shader::reload() {
 	if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Shader Module!");
 	}
+
+	std::cout << "Successfully loaded Shader: " << fileLocation << std::endl;
 }
