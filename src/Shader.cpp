@@ -10,20 +10,28 @@ Shader::Shader(VkDevice device, std::string fileName, std::string shaderFolder) 
 		throw std::runtime_error("File " + fileLocation + " not found!");
 	}
 
+	shaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+
 	// Infer type from filename
 	{
 		// Get file extension
 		const auto dotIndex = fileLocation.find_last_of('.');
 		const auto extension = fileLocation.substr(dotIndex + 1);
 
-		if (extension == "comp")
+		if (extension == "comp") {
 			type = COMPUTE_SHADER;
-		else if (extension == "vert")
+		}
+		else if (extension == "vert") {
 			type = VERTEX_SHADER;
-		else if (extension == "frag")
+			shaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+		}
+		else if (extension == "frag") {
 			type = FRAGMENT_SHADER;
-		else if (extension == "spv")
+			shaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+		}
+		else if (extension == "spv") {
 			type = SPIR_V_BINARY;
+		}
 	}
 
 	if (type != SPIR_V_BINARY) {
@@ -43,6 +51,7 @@ Shader::Shader(VkDevice device, std::string fileName, std::string shaderFolder) 
 }
 
 Shader::~Shader() {
+	std::cout << "Destroying Shader!" << std::endl;
 	cleanup();
 }
 
@@ -59,7 +68,7 @@ void Shader::reload() {
 	last_updated = last_write;
 
 	// Get new shader before the old one is removed in case of an error
-	std::vector<char> shaderBinary = readBinaryFile(fileLocation);
+	std::vector<uint32_t> shaderBinary;
 	if (type == SPIR_V_BINARY) { // No need to compile
 		shaderBinary = readBinaryFile(fileLocation);
 	}
@@ -85,7 +94,7 @@ void Shader::reload() {
 			return; // recompilation failed
 		}
 
-		shaderBinary = std::vector<char>(binary.cbegin(), binary.cend());
+		shaderBinary = std::vector<uint32_t>(binary.cbegin(), binary.end());
 	}
 
 	// Remove old shader
@@ -94,12 +103,15 @@ void Shader::reload() {
 	VkShaderModuleCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	createInfo.flags = VkShaderModuleCreateFlags();
-	createInfo.codeSize = shaderBinary.size();
+	createInfo.codeSize = shaderBinary.size() * sizeof(uint32_t);
 	createInfo.pCode = reinterpret_cast<const uint32_t*>(shaderBinary.data());
 
 	if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to create Shader Module!");
 	}
+
+	shaderStageInfo.module = shaderModule;
+	shaderStageInfo.pName = "main";
 
 	std::cout << "Successfully loaded Shader: " << fileLocation << std::endl;
 }

@@ -19,7 +19,8 @@ public:
 
     void reload();
 
-    ShaderType getType() { return type; };
+    ShaderType getType() { return type; }
+    VkPipelineShaderStageCreateInfo getShaderStageInfo() { return shaderStageInfo; }
 
 private:
     ShaderType type = NONE;
@@ -27,12 +28,13 @@ private:
 
     VkDevice device;
     VkShaderModule shaderModule = VK_NULL_HANDLE;
+    VkPipelineShaderStageCreateInfo shaderStageInfo{};
     std::filesystem::file_time_type last_updated;
 
     shaderc::Compiler shaderCompiler;
     shaderc::CompileOptions compileOptions;
 
-    std::vector<char> readBinaryFile(const std::string& fileName) {
+    std::vector<uint32_t> readBinaryFile(const std::string& fileName) {
         std::ifstream fileStream(fileName, std::ios::binary | std::ios::in | std::ios::ate);
         if (!fileStream.is_open())
             throw std::runtime_error("Could not open file " + fileName + "!");
@@ -42,7 +44,9 @@ private:
         std::vector<char> data(size);
         fileStream.read(data.data(), size);
         fileStream.close();
-        return data;
+
+        //TODO: convert Byte data to uint32_t data
+        return std::vector<uint32_t>();
     }
 
     std::string readTextFile(const std::string& fileName) {

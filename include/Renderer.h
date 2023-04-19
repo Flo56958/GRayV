@@ -19,6 +19,7 @@ public:
 	~Renderer();
 
 	void render();
+	void reloadModifiedShaders();
 
 private:
 	GLFWwindow* window;
@@ -39,8 +40,18 @@ private:
 	std::vector<VkImageView> swapChainImageViews;
 	VkFormat swapChainImageFormat;
 	VkExtent2D swapChainExtent;
+	std::vector<VkFramebuffer> swapChainFramebuffers;
 
+	VkRenderPass renderPass;
+	VkPipeline graphicsPipeline;
+	VkPipelineLayout pipelineLayout;
 	VkPipeline screenQuadPipeline;
+
+	VkCommandPool commandPool;
+	VkCommandBuffer commandBuffer;
+
+	Shader* screenQuadVS;
+	Shader* screenQuadFS;
 
 	void drawScreenQuad();
 
