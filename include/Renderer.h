@@ -22,6 +22,8 @@ public:
 	void render();
 	void reloadModifiedShaders();
 
+	void setCamera(Camera* cam) { camera = cam; }
+
 private:
 	const int MAX_FRAMES_IN_FLIGHT = 2;
 	uint32_t currentFrame = 0;
@@ -48,8 +50,16 @@ private:
 
 	VkRenderPass renderPass;
 	VkPipeline graphicsPipeline;
+	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline screenQuadPipeline;
+
+	std::vector<VkBuffer> uniformBuffers;
+	std::vector<VkDeviceMemory> uniformBuffersMemory;
+	std::vector<void*> uniformBuffersMapped;
+
+	VkDescriptorPool descriptorPool;
+	std::vector<VkDescriptorSet> descriptorSets;
 
 	VkCommandPool commandPool;
 	std::vector<VkCommandBuffer> commandBuffers;
@@ -61,9 +71,11 @@ private:
 	Shader* screenQuadVS;
 	Shader* screenQuadFS;
 
-	Camera camera;
+	Camera* camera;
 
 	void drawScreenQuad(uint32_t image_nr);
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
 	const std::vector<const char*> deviceExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
