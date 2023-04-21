@@ -188,11 +188,11 @@ Renderer::Renderer(GLFWwindow* window) : window(window)
 		}
 
 		// choose presentation mode
-		for (const auto& availablePresentMode : sc_details.presentModes) {
-			if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-				presentMode = availablePresentMode;
-			}
-		}
+		//for (const auto& availablePresentMode : sc_details.presentModes) {
+		//	if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+		//		presentMode = availablePresentMode;
+		//	}
+		//}
 
 		// choose swap extend (resolution)
 		if (sc_details.capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
@@ -216,8 +216,7 @@ Renderer::Renderer(GLFWwindow* window) : window(window)
 
 		// images in swap chain (min + 1 to not wait on driver)
 		uint32_t imageCount = sc_details.capabilities.minImageCount + 1;
-		if (sc_details.capabilities.maxImageCount > 0
-			&& imageCount > sc_details.capabilities.maxImageCount) {
+		if (sc_details.capabilities.maxImageCount > 0 && imageCount > sc_details.capabilities.maxImageCount) {
 			imageCount = sc_details.capabilities.maxImageCount;
 		}
 
@@ -567,7 +566,7 @@ void Renderer::render()
 		throw std::runtime_error("Failed to begin recording Command Buffer!");
 	}
 
-	drawScreenQuad();
+	drawScreenQuad(imageIndex);
 
 	if (vkEndCommandBuffer(commandBuffers[currentFrame]) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to record Command Buffer!");
@@ -592,8 +591,6 @@ void Renderer::render()
 		throw std::runtime_error("Failed to submit draw Command Buffer!");
 	}
 
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-
 	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.waitSemaphoreCount = 1;
@@ -610,12 +607,12 @@ void Renderer::render()
 	currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void Renderer::drawScreenQuad()
+void Renderer::drawScreenQuad(uint32_t image_nr)
 {
 	VkRenderPassBeginInfo renderPassInfo{};
 	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	renderPassInfo.renderPass = renderPass;
-	renderPassInfo.framebuffer = swapChainFramebuffers[0];
+	renderPassInfo.framebuffer = swapChainFramebuffers[image_nr];
 	renderPassInfo.renderArea.offset = { 0, 0 };
 	renderPassInfo.renderArea.extent = swapChainExtent;
 	VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };

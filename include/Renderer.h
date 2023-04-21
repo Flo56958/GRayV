@@ -63,7 +63,7 @@ private:
 
 	Camera camera;
 
-	void drawScreenQuad();
+	void drawScreenQuad(uint32_t image_nr);
 
 	const std::vector<const char*> deviceExtensions = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME
