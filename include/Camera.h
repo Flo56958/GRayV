@@ -34,5 +34,5 @@ public:
     bool perspective;                   // switch between perspective and orthographic (default: perspective)
     bool skewed;                        // switcg between normal perspective and skewed frustum (default: normal)
     glm::mat4 view, view_normal, proj;  // camera matrices (computed via a call update())
-    float aspect_ratio;
+    float aspect_ratio = 16 / 9.0;
 };
