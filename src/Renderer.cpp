@@ -7,7 +7,7 @@
 
 struct UniformBufferObject {
 	glm::vec3 pos;
-	glm::mat4 view;
+	alignas(16)glm::mat4 view;
 	glm::mat4 proj;
 };
 
