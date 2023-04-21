@@ -34,7 +34,7 @@ private:
     shaderc::Compiler shaderCompiler;
     shaderc::CompileOptions compileOptions;
 
-    std::vector<uint32_t> readBinaryFile(const std::string& fileName) {
+    std::vector<char> readBinaryFile(const std::string& fileName) {
         std::ifstream fileStream(fileName, std::ios::binary | std::ios::in | std::ios::ate);
         if (!fileStream.is_open())
             throw std::runtime_error("Could not open file " + fileName + "!");
@@ -44,9 +44,7 @@ private:
         std::vector<char> data(size);
         fileStream.read(data.data(), size);
         fileStream.close();
-
-        //TODO: convert Byte data to uint32_t data
-        return std::vector<uint32_t>();
+        return data;
     }
 
     std::string readTextFile(const std::string& fileName) {

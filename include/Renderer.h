@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Shader.h"
+#include "Camera.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -52,6 +53,8 @@ private:
 
 	Shader* screenQuadVS;
 	Shader* screenQuadFS;
+
+	Camera camera;
 
 	void drawScreenQuad();
 

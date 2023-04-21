@@ -70,7 +70,8 @@ void Shader::reload() {
 	// Get new shader before the old one is removed in case of an error
 	std::vector<uint32_t> shaderBinary;
 	if (type == SPIR_V_BINARY) { // No need to compile
-		shaderBinary = readBinaryFile(fileLocation);
+		std::vector<char> binary = readBinaryFile(fileLocation);
+		shaderBinary = std::vector<uint32_t>(reinterpret_cast<uint32_t>(binary.data()), binary.size());
 	}
 	else { // compile GLSL shader
 		const std::string sourceString = readTextFile(fileLocation); // Get source of shader

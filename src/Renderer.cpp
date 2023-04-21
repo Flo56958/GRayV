@@ -3,6 +3,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <Vulkan/Vulkan.hpp>
+#include <iostream>
 
 static const auto screenQuad_VS = GLSL_450(
 	layout(location = 0) out vec2 outUV;
@@ -484,6 +485,8 @@ Renderer::Renderer(GLFWwindow* window) : window(window)
 	if (vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer) != VK_SUCCESS) {
 		throw std::runtime_error("Failed to allocate Command Buffers!");
 	}
+
+	std::cout << "Renderer setup complete!" << std::endl;
 }
 
 Renderer::~Renderer()
