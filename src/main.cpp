@@ -21,7 +21,6 @@ int main()
         glfwPollEvents();
         ren.reloadModifiedShaders();
         ren.render();
-        std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
     // terminate GLFW

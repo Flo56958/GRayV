@@ -23,6 +23,9 @@ public:
 	void reloadModifiedShaders();
 
 private:
+	const int MAX_FRAMES_IN_FLIGHT = 2;
+	uint32_t currentFrame = 0;
+
 	GLFWwindow* window;
 
 	VkInstance instance = VK_NULL_HANDLE;
@@ -49,7 +52,11 @@ private:
 	VkPipeline screenQuadPipeline;
 
 	VkCommandPool commandPool;
-	VkCommandBuffer commandBuffer;
+	std::vector<VkCommandBuffer> commandBuffers;
+
+	std::vector<VkSemaphore> imageAvailableSemaphores;
+	std::vector<VkSemaphore> renderFinishedSemaphores;
+	std::vector<VkFence> inFlightFences;
 
 	Shader* screenQuadVS;
 	Shader* screenQuadFS;
