@@ -124,7 +124,7 @@ private:
 		// check for adequate swap chain (framebuffer) support
 		SwapChainSupportDetails sc_details = getSwapChainSupportDetails(device);
 
-		return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
+		return (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU || deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
 			&& deviceFeatures.geometryShader
 			&& requiredExtensions.empty()
 			&& !sc_details.formats.empty() && !sc_details.presentModes.empty();
