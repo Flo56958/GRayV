@@ -3,8 +3,8 @@
 #define M_PI 3.141592
 #define WIDTH 1280
 #define HEIGHT 720
-#define MAX_SAMPLES 2
-#define MAX_STEPS 250
+#define MAX_SAMPLES 4
+#define MAX_STEPS 200
 
 layout(binding = 0) uniform UniformBufferObject {
 	vec3 pos;
@@ -24,7 +24,7 @@ float sdBox( vec3 p, vec3 b )
 
 bool getVoxel(ivec3 c) {
 	vec3 p = vec3(c) + vec3(0.5);
-	float d = -sdSphere(p, 25.0);
+	float d = min(max(-sdSphere(p, 3.5), sdBox(p, vec3(6.0))), -sdSphere(p, 25.0));
 	return d < 0.0;
 }
 
@@ -131,19 +131,26 @@ void main() {
 		for (; i < MAX_STEPS; ++i) {
 			bool water = isWater(currentVoxel);
 			if (!water && getVoxel(currentVoxel)) {
-				break;
-			}
-
-			if (!last_water && water) {
-				vec3 newRayDir = refractRay(rayDir, mask2normal(rayDir, mask), 1.000293f, 1.333f);
-				throughput *= 0.98;
+				vec3 hit_n = mask2normal(rayDir, mask);
+				if (hit_n.y != 0)
+					break;
+				
+				float seed = fract(length(sideDist));
+				vec3 newRayDir = cosineSampleHemisphere(hit_n, seed);
+				throughput *= dot(newRayDir, hit_n);
 				restartDDA(currentVoxel, rayPos, rayDir, newRayDir, mask, deltaDist, step, sideDist);
-			} else if (last_water && !water) {
-				vec3 newRayDir = refractRay(rayDir, mask2normal(rayDir, mask), 1.333f, 1.000293f);
-				throughput *= 0.98;
-				if (dot(newRayDir, rayDir) >= 0) ++totalReflectionCount;
-				if (totalReflectionCount < 10)
+			} else {
+				if (!last_water && water) {
+					vec3 newRayDir = refractRay(rayDir, mask2normal(rayDir, mask), 1.000293f, 1.333f);
+					throughput *= 0.98;
 					restartDDA(currentVoxel, rayPos, rayDir, newRayDir, mask, deltaDist, step, sideDist);
+				} else if (last_water && !water) {
+					vec3 newRayDir = refractRay(rayDir, mask2normal(rayDir, mask), 1.333f, 1.000293f);
+					throughput *= 0.98;
+					if (dot(newRayDir, rayDir) >= 0) ++totalReflectionCount;
+					if (totalReflectionCount < 2)
+						restartDDA(currentVoxel, rayPos, rayDir, newRayDir, mask, deltaDist, step, sideDist);
+				}
 			}
 
 			last_water = water;
@@ -178,17 +185,7 @@ void main() {
 			}
 		}
 		if (i < MAX_STEPS) {
-			vec3 color = vec3(1);
-			if (mask.x) {
-				color = vec3(0.5);
-			}
-			if (mask.y) {
-				color = vec3(1.0);
-			}
-			if (mask.z) {
-				color = vec3(0.75);
-			}
-			outColor += vec4(color, 1) * vec4(throughput, 1.0f);
+			outColor += vec4(throughput, 1.0f);
 		}
 	}
 
