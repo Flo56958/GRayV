@@ -6,7 +6,8 @@
 #include <iostream>
 
 struct UniformBufferObject {
-	glm::vec3 pos;
+	glm::ivec3 screen;
+	alignas(16)glm::vec3 pos;
 	alignas(16)glm::mat4 view;
 	glm::mat4 proj;
 };
@@ -669,6 +670,8 @@ void Renderer::render()
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
 	UniformBufferObject ubo{};
+	int32_t time = static_cast<int32_t>(duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+	ubo.screen = glm::ivec3(swapChainExtent.width, swapChainExtent.height, time);
 	ubo.pos = camera->pos;
 	ubo.view = camera->view;
 	ubo.proj = camera->proj;
