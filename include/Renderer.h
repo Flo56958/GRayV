@@ -49,7 +49,6 @@ private:
 	std::vector<VkFramebuffer> swapChainFramebuffers;
 
 	VkRenderPass renderPass;
-	VkRenderPass renderPassImGui;
 	VkPipeline graphicsPipeline;
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkPipelineLayout pipelineLayout;
@@ -76,6 +75,7 @@ private:
 	Camera* camera;
 
 	void drawScreenQuad(uint32_t image_nr);
+	void drawGUI(VkCommandBuffer commandbuffer);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 	void initImGui();
