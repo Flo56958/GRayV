@@ -1,11 +1,13 @@
 #version 450
 
 #define M_PI 3.141592
-#define MAX_SAMPLES 4
-#define MAX_STEPS 200
 
 layout(binding = 0) uniform UniformBufferObject {
-	ivec3 screen;
+	int max_samples;
+	int max_steps;
+	int max_total_reflections;
+	int time;
+	ivec2 screen;
 	vec3 pos;
 	mat4 view;
 	mat4 proj;
@@ -104,10 +106,10 @@ void main() {
 	int height = ubo.screen.y;
 
 	vec2 shiftedUV = UV;
-	float seed = length(ubo.view[3]) + ubo.screen.z / 1000.0f;
+	float seed = length(ubo.view[3]) + ubo.time / 1000.0f;
 	outColor = vec4(0);
 
-	for (int sampling = 0; sampling < MAX_SAMPLES; ++sampling) {
+	for (int sampling = 0; sampling < ubo.max_samples; ++sampling) {
 		shiftedUV = UV + (vec2(prng(shiftedUV.x + seed * sampling) - 0.5f) / width, (prng(shiftedUV.y + seed * sampling) - 0.5f) / height);
 		vec4 dirEye = PInv * vec4(shiftedUV * 2.0f - 1.0f, -1.0f, 1.0f);
 		dirEye.w = 0.;
@@ -129,14 +131,14 @@ void main() {
 		bool last_water = isWater(currentVoxel);
 		int i = 0;
 		int totalReflectionCount = 0;
-		for (; i < MAX_STEPS; ++i) {
+		for (; i < ubo.max_steps; ++i) {
 			bool water = isWater(currentVoxel);
 			if (!water && getVoxel(currentVoxel)) {
 				vec3 hit_n = mask2normal(rayDir, mask);
 				if (hit_n.y != 0)
 					break;
 				
-				float seed = fract(length(sideDist)) * ubo.screen.z;
+				float seed = fract(length(sideDist)) * ubo.time;
 				vec3 newRayDir = cosineSampleHemisphere(hit_n, seed);
 				throughput *= dot(newRayDir, hit_n);
 				restartDDA(currentVoxel, rayPos, rayDir, newRayDir, mask, deltaDist, step, sideDist);
@@ -149,7 +151,7 @@ void main() {
 					vec3 newRayDir = refractRay(rayDir, mask2normal(rayDir, mask), 1.333f, 1.000293f);
 					throughput *= 0.98;
 					if (dot(newRayDir, rayDir) >= 0) ++totalReflectionCount;
-					if (totalReflectionCount < 9)
+					if (totalReflectionCount < ubo.max_total_reflections)
 						restartDDA(currentVoxel, rayPos, rayDir, newRayDir, mask, deltaDist, step, sideDist);
 				}
 			}
@@ -185,10 +187,10 @@ void main() {
 				}
 			}
 		}
-		if (i < MAX_STEPS) {
+		if (i < ubo.max_steps) {
 			outColor += vec4(throughput, 1.0f);
 		}
 	}
 
-	outColor /= MAX_SAMPLES;
+	outColor /= ubo.max_samples;
 }

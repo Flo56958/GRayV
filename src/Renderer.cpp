@@ -9,7 +9,11 @@
 #include <backends/imgui_impl_vulkan.h>
 
 struct UniformBufferObject {
-	glm::ivec3 screen;
+	int max_samples;
+	int max_steps;
+	int max_total_reflections;
+	int time;
+	alignas(16)glm::ivec2 screen;
 	alignas(16)glm::vec3 pos;
 	alignas(16)glm::mat4 view;
 	glm::mat4 proj;
@@ -744,13 +748,21 @@ Renderer::~Renderer()
 	vkDeviceWaitIdle(device);
 };
 
+static int max_steps = 200;
+static int max_samples = 4;
+static int max_total_reflections = 9;
+
 void Renderer::render()
 {
 	vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
 	UniformBufferObject ubo{};
 	int32_t time = static_cast<int32_t>(duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
-	ubo.screen = glm::ivec3(swapChainExtent.width, swapChainExtent.height, time);
+	ubo.time = time;
+	ubo.max_samples = max_samples;
+	ubo.max_steps = max_steps;
+	ubo.max_total_reflections = max_total_reflections;
+	ubo.screen = glm::ivec2(swapChainExtent.width, swapChainExtent.height);
 	ubo.pos = camera->pos;
 	ubo.view = camera->view;
 	ubo.proj = camera->proj;
@@ -819,7 +831,11 @@ void Renderer::drawGUI(VkCommandBuffer commandbuffer) {
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 	//imgui commands
-	ImGui::ShowDemoWindow();
+	ImGui::Begin("Settings");
+	ImGui::SliderInt("Max Samples", &max_samples, 0, 10);
+	ImGui::SliderInt("Max Steps", &max_steps, 0, 1000);
+	ImGui::SliderInt("Max Total Reflections", &max_total_reflections, 0, 20);
+	ImGui::End();
 
 	ImGui::Render();
 
